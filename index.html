@@ -1,0 +1,337 @@
+<!doctype html>
+  <html lang="pt-br">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+          <style>
+          
+              * {
+              
+                background-position: center;
+                background-size: cover;
+                margin: 0;
+                padding: 0;
+                font-weight: bold;
+                box-sizing: border-box;
+                user-select: none;
+              
+              }
+              
+              html, body {
+              
+                width: 100%;
+                height: 100%;
+                background: #000;
+                color: #fff;
+                overflow-x: hidden;
+              
+              }
+              
+              .flex {
+              
+                display: flex;
+                justify-content: center;
+                align-items: center;
+              
+              }
+              
+              .column {
+              
+                flex-direction: column;
+              
+              }
+              
+              .fixo {
+              
+                position: fixed;
+                top: 0;
+                left: 0;
+              
+              }
+              
+              .carregando {
+              
+                width: 100%;
+                height: 100%;
+                background: #fff;
+                color: #000;
+                z-index: 1;
+              
+              }
+              
+              .carregando > img {
+              
+                height: 45px;
+                margin: 40px 0;
+                animation: carregando-animacao 1s infinite;
+              
+              }
+              
+              @keyframes carregando-animacao {
+              
+                to {
+                
+                  transform: rotate(1turn);
+                
+                }
+              
+              }
+              
+              .jogo {
+              
+                width: 100%;
+                height: 100%;
+                max-width: 1920px;
+                max-height: 1080px;
+                margin: 0 auto;
+                overflow-y: auto;
+                z-index: 0;
+                
+              }
+              
+              .logo {
+              
+                padding: 20px;
+              
+              }
+              
+              .logo > img {
+              
+                height: 90px;
+              
+              }
+               
+              .grid {
+              
+                width: 100%;
+                max-width: 800px;
+                margin: 20px auto;
+                padding: 15px;
+                display: grid;
+                grid-template-columns: repeat(5, 1fr);
+                gap: 5px;
+                
+              }
+              
+              .carta {
+              
+                width: 100%;
+                background: #333;
+                box-shadow: 0 1px 3px #000;
+                position: relative;
+                transition: all 400ms ease;
+                transform-style: preserve-3d;
+                aspect-ratio: 3/4;
+              
+              }
+              
+              .carta, .face {
+              
+                border-radius: 3px;
+              
+              }
+              
+              .face {
+              
+                width: 100%;
+                height: 100%;
+                position: absolute;
+              
+              }
+              
+              .capa {
+              
+                background-image: url('https://i.imgur.com/K62st1I.jpg');
+                backface-visibility: hidden;
+              
+              }
+              
+              .frente, .carta-ativada {
+              
+                transform: rotateY(180deg);
+              
+              }
+              
+              .carta-desativada {
+              
+                box-shadow: 2px 2px 4px 2px #fff inset;
+                transition: all 900ms ease;
+                opacity: .8;
+                filter: saturate(0);
+              
+              }
+              
+            </style>
+          <title> Naruto - Jogo da memória </title>
+      </head>
+    <body onload="carregar()">
+      <div class="carregando fixo flex column">
+          <img src="./shuriken.png" alt="Carregando...">
+            <p> Carregando... </p>
+        </div>
+      <main>
+          <div class="jogo fixo">
+              <div class="logo flex">
+                  <img id="logo" alt="Naruto">
+                </div>
+              <div class="grid">
+                </div>
+            </div>
+        </main>
+      <script>
+          
+          /*
+          
+            Naruto - Memory Game -> created by @brunodasilveira27
+          
+          */
+          
+          const cartas = [
+            'hinata',
+            'sakura',
+            'sasuke',
+            'kakashi',
+            'naruto',
+            'gaara',
+            'jiraya',
+            'tsunade',
+            'shikamaru'
+          ];
+          
+          const adcClasse = (el, cl)=>{
+            cl.forEach((c)=>
+            { el.classList.add(c); });
+          };
+          
+          const rmvClasse = (el, cl)=>{
+            cl.forEach((c)=>
+            { el.classList.remove(c); });
+          };
+          
+          const criarElementos = (el, cl)=>{
+            const html = document.createElement(el);
+              adcClasse(html, cl);
+            return html;
+          };
+          
+          function carregando() {
+            const c = document.querySelectorAll('.carregando');
+               if(c) {
+                  c[0].remove();
+               };
+          };
+          
+          const imagens = {
+            'hinata' : { url : 'https://i.imgur.com/cBSDbGU.jpg' },
+            'sakura' : { url : 'https://i.imgur.com/ZzYVHE3.jpg' },
+            'sasuke' : { url : 'https://i.imgur.com/h5JDkrd.jpg' },
+            'kakashi' : { url : 'https://i.imgur.com/BJMF16K.jpg' },
+            'naruto' : { url : 'https://i.imgur.com/j6CPXv7.jpg' },
+            'gaara' : { url : 'https://i.imgur.com/nnV6I6K.jpg' },
+            'jiraya' : { url : 'https://i.imgur.com/OAQt7Wj.jpg' },
+            'tsunade' : { url : 'https://i.imgur.com/fk4biJd.jpg' },
+            'shikamaru' : { url : 'https://i.imgur.com/n7w4i2G.jpg' }
+          };
+          
+          const grid = document.querySelector('.grid');
+          const selecionadas = { primeira : '', segunda : '' };
+          let corretas = 0;
+          
+          const vitoria = ()=>{
+            if(corretas===cartas.length) {
+               alert('Parabéns!! Você venceu! Criei esse jogo da memória na intenção de realmente ser algo bem simples, para que eu possa colocar em prática alguns coneitos sobre programação e desenvolvimento de modo geral. As imagens utilizadas nesse jogo estão hospedados em um servidor fora do site onde este jogo está hospedado. Eu estudo programação pelo meu celular, o que impossibilita várias coisas; uma delas, colocar a responsividade (fazer com que o sistema se adapte em diversos dispositivos) em prática, o que provavelmente tornará o jogo bugado em outros dispositivos, já que usei apenas meu celular como parâmetro. O código fonte desse jogo ruim está hospedado no meu repositório em https://github.com/brunodasilveira27');
+            };
+          };
+          
+          const v_cartas = ()=>{
+            const primeira = selecionadas.primeira.getAttribute('data-carta');
+            const segunda = selecionadas.segunda.getAttribute('data-carta');
+               if(primeira === segunda) {
+                  adcClasse(selecionadas.primeira.firstChild, ['carta-desativada']);
+                  adcClasse(selecionadas.segunda.firstChild, ['carta-desativada']);
+                    selecionadas.primeira = selecionadas.segunda = '';
+                     corretas++;
+                       vitoria();
+               }else{
+                  setTimeout(()=>{
+                    rmvClasse(selecionadas.primeira, ['carta-ativada']);
+                    rmvClasse(selecionadas.segunda, ['carta-ativada']);
+                      selecionadas.primeira = selecionadas.segunda = '';
+                  }, 500);
+               };
+          };
+          
+          const novoJogo = ()=>
+          {
+            
+            const todas = document.querySelectorAll('.carta');
+               if(todas.length) {
+                  for(let i = 0; i < todas.length; i++) {
+                      todas[i].remove();
+                  };
+               };
+            
+            const spread = [...cartas, ...cartas];
+            const sort = spread.sort(()=> Math.random() - .5);
+                  sort.forEach((data)=>{
+                    const carta = criarElementos('div', ['carta']);
+                    const frente = criarElementos('div', ['face', 'frente']);
+                    const capa = criarElementos('div', ['face', 'capa']);
+                          carta.setAttribute('data-carta', data);
+                          frente.style.backgroundImage = `url('${imagens[data].url}')`;
+                          carta.addEventListener('click', function({ target }) {
+                            if(target.parentNode.className.includes('carta-ativada')) { return; }else{
+                               if(selecionadas.primeira === '') {
+                                  selecionadas.primeira = target.parentNode;
+                                    adcClasse(carta, ['carta-ativada']);
+                               }
+                               else if(selecionadas.segunda === '') {
+                                  selecionadas.segunda = target.parentNode;
+                                    adcClasse(carta, ['carta-ativada']);
+                                      v_cartas();
+                               };
+                            };
+                          });
+                        grid.append(carta);
+                        carta.append(frente);
+                        carta.append(capa);
+                  });
+          };
+          
+          const carregar = function() {
+            novoJogo();
+            let carregados = total = 0;
+            const praCarregar = {
+              0 : { c : new Image(), l : document.querySelector('.jogo'), t : 'fundo' },
+              1 : { c : new Image(), l : document.querySelector('#logo'), t : 'imagem' },
+            };
+            const url = [
+              'https://i.imgur.com/Uav4NWa.png',
+              'https://i.imgur.com/gqGxqRK.png',
+            ];
+            for(let k in imagens) {
+                url.push(imagens[k].url);
+            };
+              for(let c in praCarregar) {
+                  total++;
+                    praCarregar[c].c.src = url[c];
+                    praCarregar[c].c.onload = ()=>
+                    {
+                      carregados++;
+                      if(praCarregar[c].t === 'fundo') {
+                         praCarregar[c].l.style.backgroundImage = `url('${praCarregar[c].c.src}')`;
+                      }
+                      else if(praCarregar[c].t === 'imagem') {
+                         praCarregar[c].l.src = praCarregar[c].c.src;
+                      };
+                    let porcentagem = ((carregados*100)/total);
+                     if(porcentagem === 100) {
+                        carregando();
+                     };
+                    };
+              };
+          };
+          alert('Hello, world! This game was created by @brunodasilveira27.');
+        </script>
+      </body>
+</html>
